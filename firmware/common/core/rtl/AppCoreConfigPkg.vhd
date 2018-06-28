@@ -2,7 +2,7 @@
 -- File       : AppCoreConfigPkg.vhd
 -- Company    : SLAC National Accelerator Laboratory
 -------------------------------------------------------------------------------
--- Description:
+-- Description: AppCore configuration for BPM
 -------------------------------------------------------------------------------
 -- This file is part of 'Example Project Firmware'.
 -- It is subject to the license terms in the LICENSE.txt file found in the
@@ -15,15 +15,26 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
-use work.StdRtlPkg.all;
 use work.AppCorePkg.all;
-use work.AppCoreConfigCommonPkg.all;
 
 package AppCoreConfigPkg is
 
-   constant MODE_CAVITY_BPM_C  : natural := 0;
+   function appCoreConfigFunc return AppCoreConfigType;
 
-   constant APP_CORE_CONFIG_C  : AppCoreConfigType := APP_CORE_CONFIG_COMMON_C;
+   constant APP_CORE_CONFIG_COMMON_C : AppCoreConfigType := appCoreConfigFunc;
 
 end package AppCoreConfigPkg;
+
+package body AppCoreConfigPkg is
+
+   function appCoreConfigFunc return AppCoreConfigType is
+      variable v : AppCoreConfigType;
+   begin
+      v := APP_CORE_CONFIG_DFLT_C;
+      v.numBays := 2;
+      return v;
+   end function appCoreConfigFunc;
+   
+end package body AppCoreConfigPkg;
