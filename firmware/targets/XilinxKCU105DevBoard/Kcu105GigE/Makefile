@@ -6,15 +6,7 @@ target: prom
 # from the same Makefile and source tree). Ruckus will print a fat
 # warning but that can be ignored...
 #
-ifeq ($(APP_CFG),c)
-export PROJECT=Kcu105CavityBpm
-export APP_CORE_TYPE_BAY0 = "Cavity"
-DEFAULTS_SIM=defaults_cavity_sim.yaml
-else
-export PROJECT=Kcu105StriplineBpm
-export APP_CORE_TYPE_BAY0 = "Stripline"
-DEFAULTS_SIM=defaults_stripline_sim.yaml
-endif
+export PROJECT=Kcu105Bpm
 
 # Define Firmware Version Number
 export PRJ_VERSION = 0x00000001
@@ -52,7 +44,8 @@ yaml $(SOURCE_DEPEND): config/defaults.yaml
 config/defaults.yaml: Makefile
 	$(RM) $@
 	echo '# THIS FILE WAS AUTOMATICALLY GENERATED -- DO NOT EDIT' >> $@
-	echo '#'                           >> $@
-	echo '#include defaults_top.yaml'  >> $@
-	echo '#include defaults_trig.yaml' >> $@
-	echo '#include $(DEFAULTS_SIM)'    >> $@
+	echo '#'                                    >> $@
+	echo '#include defaults_top.yaml'           >> $@
+	echo '#include defaults_trig.yaml'          >> $@
+	echo '#include defaults_stripline_sim.yaml' >> $@
+	echo '#include defaults_cavity_sim.yaml'    >> $@
