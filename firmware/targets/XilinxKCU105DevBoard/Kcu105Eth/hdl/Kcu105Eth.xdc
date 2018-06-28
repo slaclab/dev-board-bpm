@@ -62,7 +62,7 @@ set_property -dict { PACKAGE_PIN AN18 IOSTANDARD LVCMOS12 DRIVE 8} [get_ports { 
 set_property -dict { PACKAGE_PIN AN17 IOSTANDARD LVCMOS12 DRIVE 8} [get_ports { pmod[1][7] }]
 
 # Si5328 Reset
-set_property -dict { PACKAGE_PIN K23 IOSTANDARD LVCMOS18 } [get_ports { si5328Rst }]
+set_property -dict { PACKAGE_PIN K23 IOSTANDARD LVCMOS18 } [get_ports { si5328RstN}]
 set_property -dict { PACKAGE_PIN L22 IOSTANDARD LVCMOS18 } [get_ports { si5328Int }]
 
 # MDIO/Ext. PHY
@@ -104,8 +104,9 @@ set_property PACKAGE_PIN W3 [get_ports "sfpTxN[1]"]
 set_property PACKAGE_PIN V2 [get_ports "sfpRxP[1]"]
 set_property PACKAGE_PIN V1 [get_ports "sfpRxN[1]"]
 
-set_property IO_BUFFER_TYPE "NONE" [get_ports "sfpTxP[1]"]
-set_property IO_BUFFER_TYPE "NONE" [get_ports "sfpTxN[1]"]
+# Use this if an SFP port is unused:
+#set_property IO_BUFFER_TYPE "NONE" [get_ports "sfpTxP[1]"]
+#set_property IO_BUFFER_TYPE "NONE" [get_ports "sfpTxN[1]"]
 
 # MGTrefclk0 bank 227
 set_property PACKAGE_PIN P6 [get_ports "refClkP[0]"]
@@ -155,6 +156,10 @@ create_generated_clock -name jesdClk    [get_pins {U_App/U_SimJesdClock/U_ClockG
 create_generated_clock -name jesdUsrClk [get_pins {U_App/U_SimJesdClock/U_ClockGen/MmcmGen.U_Mmcm/CLKOUT2}]
 
 set_property CLOCK_DEDICATED_ROUTE BACKBONE [get_nets U_SysPll/CLKIN1]
+
+set_false_path -from [get_ports {gpioDip[2]}]
+set_false_path -from [get_ports {gpioDip[1]}]
+set_false_path -from [get_ports {gpioDip[0]}]
 
 set rxChannelsRegClk          jesdUsrClk
 # jesd2x/jesdUsrClk multiplication factor - 1
