@@ -18,4 +18,6 @@ loadSource -path  "$::DIR_PATH/submodules/amc-carrier-core/AppTop/rtl/AppMsgOb.v
 loadRuckusTcl "$::DIR_PATH/submodules/surf"
 loadRuckusTcl "$::DIR_PATH/submodules/lcls-timing-core"
 loadRuckusTcl "$::DIR_PATH/submodules/dev-board-misc-utils"
+loadRuckusTcl "$::DIR_PATH/submodules/lcls-bpm-core"
+loadRuckusTcl "$::DIR_PATH/submodules/lcls-bpm-simulator"
 loadRuckusTcl "$::DIR_PATH/common"

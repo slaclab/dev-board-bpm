@@ -138,3 +138,15 @@ NetIODev:
         <<: *stream
         TDESTMux:
           TDEST: 0x87
+    BPM_A_STREAM:
+      class: Field
+      at:
+        <<: *stream
+        TDESTMux:
+          TDEST: 0xC0
+    BPM_B_STREAM:
+      class: Field
+      at:
+        <<: *stream
+        TDESTMux:
+          TDEST: 0xC1

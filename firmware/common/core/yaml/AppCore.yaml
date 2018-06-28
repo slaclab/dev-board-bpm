@@ -1,0 +1,95 @@
+##############################################################################
+## This file is part of 'Example Firmware Project'.
+## It is subject to the license terms in the LICENSE.txt file found in the
+## top-level directory of this distribution and at:
+##    https://confluence.slac.stanford.edu/display/ppareg/LICENSE.html.
+## No part of 'Example Firmware Project', including this file,
+## may be copied, modified, propagated, or distributed except according to
+## the terms contained in the LICENSE.txt file.
+##############################################################################
+#schemaversion 3.0.0
+#once AppCore.yaml
+#
+#include RxChannels.yaml
+#include BpmStriplRegs.yaml
+#include BpmCavityRegs.yaml
+#include SimFeedRegs.yaml
+
+AppCore: &AppCore
+  size: 0x00800000
+  class: MMIODev
+  children:
+    BpmSim:
+      <<: *BpmSim
+      at: { offset: 0x00020000, nelms: 2, stride: 0x00010000 }
+    SimFeed:
+      <<: *SimFeedRegs
+      at: { offset: 0x00040000, nelms: 2, stride: 0x00010000 }
+    AmcBay0:
+      class: MMIODev
+      size:  0x10000
+      at: { offset: 0x00000000 }
+      children:
+        Bpm:
+          <<: *BpmStriplRegs
+          at: { offset: 0x00000000 }
+    AmcBay1:
+      class: MMIODev
+      size:  0x10000
+      at: { offset: 0x00010000 }
+      children:
+        Bpm:
+          <<: *BpmCavityRegs
+          at: { offset: 0x00000000 }
+    MiscCSR:
+      class: MMIODev
+      size:  0x200
+      at: { offset: 0x000F0000 }
+      children:
+        Config:
+          class: IntField
+          at:
+            offset: 0x100
+        BpMsgFilterCtrl:
+          class: IntField
+          description: "Enable filtering/decimation of BP messages (for testing with SW)"
+          sizeBits: 1
+          lsBit:    0
+          enums:
+            - { name: "Enabled",  value: 1 }
+            - { name: "Disabled", value: 0 }
+          at:
+            offset: 0x108
+        BpMsgFilterMonRst:
+          class: IntField
+          description: "Reset Filter Rate Monitor Counters"
+          sizeBits: 1
+          lsBit:    1
+          enums:
+            - { name: "Reset",  value: 1 }
+            - { name: "Run",    value: 0 }
+          at:
+            offset: 0x108
+        Status:
+          class: IntField
+          mode:  RO
+          at:
+            offset: 0x000
+        BpMsgFilterRate:
+          class: IntField
+          description: "Current rate (Hz) of the BpMg Filter"
+          mode: RO
+          at:
+            offset: 0x008
+        BpMsgFilterRateMin:
+          class: IntField
+          description: "Min rate (Hz) of the BpMg Filter"
+          mode: RO
+          at:
+            offset: 0x00c
+        BpMsgFilterRateMax:
+          class: IntField
+          description: "Max rate (Hz) of the BpMg Filter"
+          mode: RO
+          at:
+            offset: 0x010
