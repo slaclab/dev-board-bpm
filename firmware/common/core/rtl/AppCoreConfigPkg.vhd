@@ -23,7 +23,7 @@ package AppCoreConfigPkg is
 
    function appCoreConfigFunc return AppCoreConfigType;
 
-   constant APP_CORE_CONFIG_COMMON_C : AppCoreConfigType := appCoreConfigFunc;
+   constant APP_CORE_CONFIG_C : AppCoreConfigType := appCoreConfigFunc;
 
 end package AppCoreConfigPkg;
 
