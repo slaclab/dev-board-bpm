@@ -13,3 +13,9 @@
 [submodule "firmware/submodules/dev-board-misc-utils"]
 	path = firmware/submodules/dev-board-misc-utils
 	url = git@github.com:/slaclab/dev-board-misc-utils
+[submodule "firmware/submodules/lcls-bpm-core"]
+	path = firmware/submodules/lcls-bpm-core
+	url = git@github.com:/slaclab/lcls-bpm-core
+[submodule "firmware/submodules/lcls-bpm-simulator"]
+	path = firmware/submodules/lcls-bpm-simulator
+	url = git@github.com:/slaclab/lcls-bpm-simulator
