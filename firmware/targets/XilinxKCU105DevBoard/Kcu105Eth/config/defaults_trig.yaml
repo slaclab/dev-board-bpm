@@ -1,0 +1,27 @@
+- AmcCarrierCore/AmcCarrierTiming/EvrV2CoreTriggers:
+  - EvrV2ChannelReg[0]:
+    - RateSel: !<value> 6
+    - DestSel: !<value> 0x20000
+    - Enable:  !<value> 1
+  - EvrV2ChannelReg[1]:
+    - RateSel: !<value> 0
+    - DestSel: !<value> 0x20000
+    - Enable:  !<value> 1
+  - EvrV2TriggerReg[0-1]:
+    - Source:  0
+    - Enable:  1
+    - Width:   1
+  - EvrV2TriggerReg[4-5]:
+    - Source:  1
+    - Enable:  1
+    - Width:   1
+  - EvrV2TriggerReg[11]:
+    - Source:  1
+    - Enable:  1
+    - Width:   1
+    - Delay:   150
+  - EvrV2TriggerReg[12]: # Bp message filter
+    - Source:  0
+    - Enable:  1
+    - Width:   30
+    - Delay:   150
