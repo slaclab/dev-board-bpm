@@ -110,6 +110,8 @@ architecture Impl of AppCore is
    signal bpmBus            : BpmBusArray := (others => BPM_BUS_INIT_C);
    signal locDiagnostic     : DiagnosticBusType;
 
+   signal timeStamp         : slv(63 downto 0);
+   signal pulseId           : slv(63 downto 0);
    signal bpMsgTimestamp    : slv(63 downto 0);
 
    signal bpMsgDecimated    : sl;
@@ -131,10 +133,10 @@ begin
    ---------------------------
    U_XBAR : entity work.AxiLiteCrossbar
       generic map (
-         TPD_G              => TPD_G,
-         NUM_SLAVE_SLOTS_G  => NUM_AXI_SLAVES_C,
-         NUM_MASTER_SLOTS_G => NUM_AXI_MASTERS_C,
-         MASTERS_CONFIG_G   => AXI_CROSSBAR_MASTERS_CONFIG_C)
+         TPD_G               => TPD_G,
+         NUM_SLAVE_SLOTS_G   => NUM_AXI_SLAVES_C,
+         NUM_MASTER_SLOTS_G  => NUM_AXI_MASTERS_C,
+         MASTERS_CONFIG_G    => AXI_CROSSBAR_MASTERS_CONFIG_C)
       port map (
          sAxiWriteMasters(0) => sAxilWriteMaster,
          sAxiWriteMasters(1) => simFeedObAxilWrMst(0),
@@ -154,6 +156,20 @@ begin
          mAxiReadSlaves      => mAxilReadSlaves,
          axiClk              => axilClk,
          axiClkRst           => axilRst);
+
+   U_TS_DEMUX : entity work.TimeStampDemux
+      generic map (
+         TPD_G               => TPD_G
+      )
+      port map (
+         timingClk          => timingClk,
+         timingRst          => timingRst,
+
+         timingBus          => timingBus,
+
+         timeStamp          => timeStamp,
+         pulseId            => pulseId
+      );
 
    GEN_BAYS : for bay in NUM_CFG_BAYS_C - 1 downto 0 generate
 
@@ -258,7 +274,8 @@ begin
          timingClk          => timingClk,
          timingRst          => timingRst,
 
-         timingBus          => timingBus,
+         timeStamp          => timeStamp,
+         pulseId            => pulseId,
 
          fastTrigger        => fastTrig,
          slowTrigger        => slowTrig,
@@ -326,7 +343,7 @@ begin
    diagnosticRst     <= timingRst;
    diagnosticBus     <= locDiagnostic;
 
-   bpMsgTimestamp    <= ite( BPM_MSG_TSNOTPID_C, locDiagnostic.timingMessage.timeStamp, locDiagnostic.timingMessage.pulseID );
+   bpMsgTimestamp    <= ite( BPM_MSG_TSNOTPID_C, timeStamp, pulseID );
 
    U_SYNC_ENBDEC : entity work.Synchronizer
       generic map (
