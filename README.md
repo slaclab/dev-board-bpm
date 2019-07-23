@@ -120,6 +120,21 @@ Note that you need git LFS. If you are unfamiliar with the basic steps
 for cloning and building SLAC firmware please consult
 <https://github.com/slaclab/dev-board-examples>
 
+## Release Notes
+Note: odd 3rd number is used for added image files
+v1.0.0: Initial Release
+v1.0.1: Image files added
+v1.1  : Use Si5328 to generate ethernet clocks
+        Run-time switching between 10G(SRP)/1G(RJ45) ethernet
+        Added PMOD (and some other) connectors
+        Renamed target subdirectory to Kcu105Eth
+v1.1.1: Image files added
+v1.2.0: Added 'backdoor' controller (SRPV2 over UDP @8192)
+        Added MAC registers
+        Added ethernet transceiver registers
+        Jumbo frame support (use surf with ESLCOMMON-229 patch)
+        Added WAVEFORM_TDATA_BYTES_G to configurable parameters in AppCorePkg.vhd
+
 ## Acknowledgement
 
 This project has been derived from <git@github.com/slaclab/dev-board-examples>

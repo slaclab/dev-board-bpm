@@ -47,20 +47,21 @@ entity SysReg is
       clk               : in  sl;
       rst               : in  sl;
       -- AXI-Lite interface
-      sAxilWriteMaster  : in  AxiLiteWriteMasterArray(1 downto 0);
-      sAxilWriteSlave   : out AxiLiteWriteSlaveArray (1 downto 0);
-      sAxilReadMaster   : in  AxiLiteReadMasterArray (1 downto 0);
-      sAxilReadSlave    : out AxiLiteReadSlaveArray  (1 downto 0);
+      sAxilWriteMaster  : in  AxiLiteWriteMasterArray(2 downto 0);
+      sAxilWriteSlave   : out AxiLiteWriteSlaveArray (2 downto 0);
+      sAxilReadMaster   : in  AxiLiteReadMasterArray (2 downto 0);
+      sAxilReadSlave    : out AxiLiteReadSlaveArray  (2 downto 0);
 
       bsaWriteMaster    : out AxiLiteWriteMasterType;
       bsaWriteSlave     : in  AxiLiteWriteSlaveType;
       bsaReadMaster     : out AxiLiteReadMasterType;
       bsaReadSlave      : in  AxiLiteReadSlaveType;
 
-      appWriteMaster    : out AxiLiteWriteMasterType;
-      appWriteSlave     : in  AxiLiteWriteSlaveType;
-      appReadMaster     : out AxiLiteReadMasterType;
-      appReadSlave      : in  AxiLiteReadSlaveType;
+      topWriteMasters   : out AxiLiteWriteMasterArray(2 downto 0);
+      topWriteSlaves    : in  AxiLiteWriteSlaveArray (2 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
+      topReadMasters    : out AxiLiteReadMasterArray (2 downto 0);
+      topReadSlaves     : in  AxiLiteReadSlaveArray  (2 downto 0) := (others => AXI_LITE_READ_SLAVE_EMPTY_DECERR_C);
+ 
 
       ethWriteMaster    : out AxiLiteWriteMasterType;
       ethWriteSlave     : in  AxiLiteWriteSlaveType;
@@ -147,7 +148,6 @@ architecture mapping of SysReg is
    signal timingTxRstAsync  : sl;
 
    signal timingBus         : TimingBusType;
-   signal exptBus           : ExptBusType;
    signal appTimingMode     : sl;
 
 
@@ -176,26 +176,30 @@ begin
    U_XBAR : entity work.AxiLiteCrossbar
       generic map (
          TPD_G              => TPD_G,
-         NUM_SLAVE_SLOTS_G  => 4,
+         NUM_SLAVE_SLOTS_G  => 5,
          NUM_MASTER_SLOTS_G => NUM_AXI_MASTERS_C,
          MASTERS_CONFIG_G   => SYSREG_MASTERS_CONFIG_C)
       port map (
          sAxiWriteMasters(0) => sAxilWriteMaster(0),
          sAxiWriteMasters(1) => sAxilWriteMaster(1),
-         sAxiWriteMasters(2) => tAxilWriteMaster,
-         sAxiWriteMasters(3) => fAxilWriteMaster,
+         sAxiWriteMasters(2) => sAxilWriteMaster(2),
+         sAxiWriteMasters(3) => tAxilWriteMaster,
+         sAxiWriteMasters(4) => fAxilWriteMaster,
          sAxiWriteSlaves(0)  => sAxilWriteSlave(0),
          sAxiWriteSlaves(1)  => sAxilWriteSlave(1),
-         sAxiWriteSlaves(2)  => tAxilWriteSlave,
-         sAxiWriteSlaves(3)  => fAxilWriteSlave,
+         sAxiWriteSlaves(2)  => sAxilWriteSlave(2),
+         sAxiWriteSlaves(3)  => tAxilWriteSlave,
+         sAxiWriteSlaves(4)  => fAxilWriteSlave,
          sAxiReadMasters(0)  => sAxilReadMaster(0),
          sAxiReadMasters(1)  => sAxilReadMaster(1),
-         sAxiReadMasters(2)  => tAxilReadMaster,
-         sAxiReadMasters(3)  => fAxilReadMaster,
+         sAxiReadMasters(2)  => sAxilReadMaster(2),
+         sAxiReadMasters(3)  => tAxilReadMaster,
+         sAxiReadMasters(4)  => fAxilReadMaster,
          sAxiReadSlaves(0)   => sAxilReadSlave(0),
          sAxiReadSlaves(1)   => sAxilReadSlave(1),
-         sAxiReadSlaves(2)   => tAxilReadSlave,
-         sAxiReadSlaves(3)   => fAxilReadSlave,
+         sAxiReadSlaves(2)   => sAxilReadSlave(2),
+         sAxiReadSlaves(3)   => tAxilReadSlave,
+         sAxiReadSlaves(4)   => fAxilReadSlave,
          mAxiWriteMasters    => mAxilWriteMasters,
          mAxiWriteSlaves     => mAxilWriteSlaves,
          mAxiReadMasters     => mAxilReadMasters,
@@ -346,8 +350,6 @@ begin
          appTimingBus        => timingBus,
          appTimingMode       => appTimingMode,
 
-         exptBus             => exptBus,
-
          axilClk             => clk,
          axilRst             => rst,
          axilReadMaster      => mAxilReadMasters (TIMCORE_INDEX_C),
@@ -383,7 +385,6 @@ begin
          evrClk              => appTimingClk,
          evrRst              => appTimingRst,
          evrBus              => timingBus,
-         exptBus             => exptBus,
          -- Trigger and Sync Port
          trigOut             => appTimingTrig, -- out slv(11 downto 0);
          evrModeSel          => appTimingMode
@@ -456,6 +457,7 @@ begin
          axilWriteSlave   => mAxilWriteSlaves(TIM_GTH_INDEX_C),
 
          stableClk        => clk,
+         stableRst        => rst,
 
          gtRefClk         => timingRefClk,
          gtRefClkDiv2     => timingRefClkDiv2,
@@ -581,9 +583,19 @@ begin
    ethReadMaster                  <= mAxilReadMasters (ETH_INDEX_C);
    mAxilReadSlaves  (ETH_INDEX_C) <= ethReadSlave;
 
-   appWriteMaster                 <= mAxilWriteMasters(APP_INDEX_C);
-   mAxilWriteSlaves (APP_INDEX_C) <= appWriteSlave;
-   appReadMaster                  <= mAxilReadMasters (APP_INDEX_C);
-   mAxilReadSlaves  (APP_INDEX_C) <= appReadSlave;
+   topWriteMasters(0)             <= mAxilWriteMasters(APP_INDEX_C);
+   mAxilWriteSlaves (APP_INDEX_C) <= topWriteSlaves(0);
+   topReadMasters(0)              <= mAxilReadMasters (APP_INDEX_C);
+   mAxilReadSlaves  (APP_INDEX_C) <= topReadSlaves(0);
+
+   topWriteMasters(1)             <= mAxilWriteMasters(GIG_INDEX_C);
+   mAxilWriteSlaves (GIG_INDEX_C) <= topWriteSlaves(1);
+   topReadMasters(1)              <= mAxilReadMasters (GIG_INDEX_C);
+   mAxilReadSlaves  (GIG_INDEX_C) <= topReadSlaves(1);
+
+   topWriteMasters(2)             <= mAxilWriteMasters(GTH_INDEX_C);
+   mAxilWriteSlaves (GTH_INDEX_C) <= topWriteSlaves(2);
+   topReadMasters(2)              <= mAxilReadMasters (GTH_INDEX_C);
+   mAxilReadSlaves  (GTH_INDEX_C) <= topReadSlaves(2);
 
 end mapping;

@@ -53,6 +53,16 @@ package AppCorePkg is
       ipAddress            : slv(31 downto 0);
       useDhcp              : boolean;
       enableEthJumboFrames : boolean;
+      -- NOTE: When disabling interleaved RSSI the top-level YAML
+      --       MUST be changed accordingly:
+      --       Interleaved RSSI:
+      ---        UDP/port: 8198
+      ---        depack/protocolVersion: DEPACKETIZER_V2
+      --       Non-interleaved RSSI:
+      ---        UDP/port: 8193
+      ---        depack/protocolVersion: DEPACKETIZER_V0
+      enableRssiInterleave : boolean; -- whether to enable interleaved RSSI
+      enableSRPV0          : boolean; -- whether to instantiate V0 backdoor
       disableBSA           : boolean;
       disableBLD           : boolean;
       numAppLEDs           : natural;
@@ -67,6 +77,7 @@ package AppCorePkg is
       sigGenRamClk         : Slv7Array    (1 downto 0); -- 0: jesd2x, 1: jesd1x
       smaPTrigger          : integer; -- which trigger to connect to GPIO SMA P (-1 for none)
       smaNTrigger          : integer; -- which trigger to connect to GPIO SMA P (-1 for none)
+      waveformTdataBytes   : positive range 4 to 8; -- AXI stream width between DaqMuxV2 and BSA
    end record;
 
    constant APP_CORE_CONFIG_DFLT_C : AppCoreConfigType := (
@@ -76,7 +87,11 @@ package AppCorePkg is
       macAddress           => x"010300564400",  -- 00:44:56:00:03:01 (ETH only)
       ipAddress            => x"0A02A8C0",      -- 192.168.2.10 (ETH only)
       useDhcp              => true,
-      enableEthJumboFrames => false,
+      enableEthJumboFrames => true,
+      -- NOTE: When disabling interleaved RSSI the top-level YAML
+      --       MUST be changed accordingly:
+      enableRssiInterleave => true,
+      enableSRPV0          => true,
       disableBSA           => false,
       disableBLD           => false,
       numAppLEDs           => 4,
@@ -90,7 +105,8 @@ package AppCorePkg is
       sigGenLaneMode       => (others => "0000000"), -- 0: 32-bit, 1: 16-bit
       sigGenRamClk         => (others => "0000000"), -- 0: jesd2x, 1: jesd1x
       smaPTrigger          => 8,
-      smaNTrigger          => 9
+      smaNTrigger          => 9,
+      waveformTdataBytes   => 4
    );
 
 end package AppCorePkg;

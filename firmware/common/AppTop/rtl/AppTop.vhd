@@ -42,6 +42,11 @@ entity AppTop is
       -- Clock and Reset
       axilClk         : in  sl;
       axilRst         : in  sl;
+      -- AXI Lite Interface
+      topReadMasters  : out AxiLiteReadMasterArray (1 downto 0);
+      topReadSlaves   : in  AxiLiteReadSlaveArray  (1 downto 0);
+      topWriteMasters : out AxiLiteWriteMasterArray(1 downto 0);
+      topWriteSlaves  : in  AxiLiteWriteSlaveArray (1 downto 0);
       -- AXI Memory Interface
       axiClk          : in  sl;
       axiRst          : in  sl;
@@ -129,10 +134,10 @@ architecture mapping of AppTop is
    signal axilWriteMasters  : AxiLiteWriteMasterArray(N_AXIL_MASTERS_C - 1 downto 0);
    signal axilWriteSlaves   : AxiLiteWriteSlaveArray (N_AXIL_MASTERS_C - 1 downto 0) := (others => AXI_LITE_WRITE_SLAVE_EMPTY_DECERR_C);
 
-   signal mAxilReadMasters  : AxiLiteReadMasterArray (1 downto 0);
-   signal mAxilReadSlaves   : AxiLiteReadSlaveArray  (1 downto 0);
-   signal mAxilWriteMasters : AxiLiteWriteMasterArray(1 downto 0);
-   signal mAxilWriteSlaves  : AxiLiteWriteSlaveArray (1 downto 0);
+   signal mAxilReadMasters  : AxiLiteReadMasterArray (2 downto 0);
+   signal mAxilReadSlaves   : AxiLiteReadSlaveArray  (2 downto 0);
+   signal mAxilWriteMasters : AxiLiteWriteMasterArray(2 downto 0);
+   signal mAxilWriteSlaves  : AxiLiteWriteSlaveArray (2 downto 0);
 
    signal bsaReadMaster     : AxiLiteReadMasterType;
    signal bsaReadSlave      : AxiLiteReadSlaveType  := AXI_LITE_READ_SLAVE_EMPTY_DECERR_C;
@@ -238,9 +243,11 @@ begin
             USE_XVC_G       => APP_CORE_CONFIG_G.useXvcJtagBridge,
             DHCP_G          => APP_CORE_CONFIG_G.useDhcp,
             JUMBO_G         => APP_CORE_CONFIG_G.enableEthJumboFrames,
+            SRP_V0_EN_G     => APP_CORE_CONFIG_G.enableSRPV0,
             RSSI_SIZE_G     => RSSI_SIZE_C,
             RSSI_STRM_CFG_G => RSSI_STRM_CFG_C,
             RSSI_ROUTES_G   => RSSI_ROUTES_C,
+            RSSI_ILEAVE_EN_G=> APP_CORE_CONFIG_G.enableRssiInterleave,
             UDP_SRV_SIZE_G  => 1,
             UDP_SRV_PORTS_G => (0 => 8197),
             UDP_CLT_SIZE_G  => 1,
@@ -273,10 +280,10 @@ begin
             udpObCltMasters(0) => ibAxisMasters(APP_BPCLT_STRM_C),
             udpObCltSlaves (0) => ibAxisSlaves (APP_BPCLT_STRM_C),
             -- AXI-Lite Master interface
-            mAxilWriteMaster   => mAxilWriteMasters(0),
-            mAxilWriteSlave    => mAxilWriteSlaves(0),
-            mAxilReadMaster    => mAxilReadMasters(0),
-            mAxilReadSlave     => mAxilReadSlaves(0),
+            mAxilWriteMasters  => mAxilWriteMasters(1 downto 0),
+            mAxilWriteSlaves   => mAxilWriteSlaves (1 downto 0),
+            mAxilReadMasters   => mAxilReadMasters (1 downto 0),
+            mAxilReadSlaves    => mAxilReadSlaves  (1 downto 0),
             -- AXI-Lite Slave interface
             sAxilWriteMaster   => ethWriteMaster,
             sAxilWriteSlave    => ethWriteSlave,
@@ -342,17 +349,17 @@ begin
 
    U_Xbar : entity work.AxiLiteCrossbar
       generic map (
-         TPD_G              => TPD_G,
-         NUM_SLAVE_SLOTS_G  => 1,
-         NUM_MASTER_SLOTS_G => N_AXIL_MASTERS_C,
-         MASTERS_CONFIG_G   => AXIL_CONFIG_C)
+         TPD_G               => TPD_G,
+         NUM_SLAVE_SLOTS_G   => 1,
+         NUM_MASTER_SLOTS_G  => N_AXIL_MASTERS_C,
+         MASTERS_CONFIG_G    => AXIL_CONFIG_C)
       port map (
          axiClk              => axilClk,
          axiClkRst           => axilRst,
          sAxiWriteMasters(0) => appWriteMaster,
-         sAxiWriteSlaves(0)  => appWriteSlave,
-         sAxiReadMasters(0)  => appReadMaster,
-         sAxiReadSlaves(0)   => appReadSlave,
+         sAxiWriteSlaves (0) => appWriteSlave,
+         sAxiReadMasters (0) => appReadMaster,
+         sAxiReadSlaves  (0) => appReadSlave,
          mAxiWriteMasters    => axilWriteMasters,
          mAxiWriteSlaves     => axilWriteSlaves,
          mAxiReadMasters     => axilReadMasters,
@@ -387,10 +394,21 @@ begin
          ethWriteMaster    => ethWriteMaster,
          ethWriteSlave     => ethWriteSlave,
 
-         appReadMaster     => appReadMaster,
-         appReadSlave      => appReadSlave,
-         appWriteMaster    => appWriteMaster,
-         appWriteSlave     => appWriteSlave,
+         topReadMasters(0) => appReadMaster,
+         topReadMasters(1) => topReadMasters(0),
+         topReadMasters(2) => topReadMasters(1),
+
+         topReadSlaves(0)  => appReadSlave,
+         topReadSlaves(1)  => topReadSlaves(0),
+         topReadSlaves(2)  => topReadSlaves(1),
+
+         topWriteMasters(0)=> appWriteMaster,
+         topWriteMasters(1)=> topWriteMasters(0),
+         topWriteMasters(2)=> topWriteMasters(1),
+
+         topWriteSlaves(0) => appWriteSlave,
+         topWriteSlaves(1) => topWriteSlaves(0),
+         topWriteSlaves(2) => topWriteSlaves(1),
 
          obTimingEthMaster => obTimingEthMaster,
          obTimingEthSlave  => obTimingEthSlave,
@@ -435,10 +453,11 @@ begin
 
       U_BSA : entity work.AmcCarrierBsa
          generic map (
-            TPD_G          => TPD_G,
-            FSBL_G         => false,
-            DISABLE_BSA_G  => APP_CORE_CONFIG_G.disableBSA,
-            DISABLE_BLD_G  => APP_CORE_CONFIG_G.disableBLD
+            TPD_G                  => TPD_G,
+            FSBL_G                 => false,
+            WAVEFORM_TDATA_BYTES_G => APP_CORE_CONFIG_G.waveformTdataBytes,
+            DISABLE_BSA_G          => APP_CORE_CONFIG_G.disableBSA,
+            DISABLE_BLD_G          => APP_CORE_CONFIG_G.disableBLD
          )
          port map (
             -- AXI-Lite Interface (axilClk domain)
@@ -495,7 +514,7 @@ begin
          generic map (
             TPD_G                  => TPD_G,
             DECIMATOR_EN_G         => true,
-            WAVEFORM_TDATA_BYTES_G => 4,
+            WAVEFORM_TDATA_BYTES_G => APP_CORE_CONFIG_G.waveformTdataBytes,
             BAY_INDEX_G            => ite((i = 0), '0', '1'),
             N_DATA_IN_G            => 18,
             N_DATA_OUT_G           => 4)
@@ -620,10 +639,10 @@ begin
             sAxilReadMaster     => axilReadMasters ( CORE_INDEX_C ),
             sAxilReadSlave      => axilReadSlaves  ( CORE_INDEX_C ),
 
-            mAxilWriteMaster    => mAxilWriteMasters(1),
-            mAxilWriteSlave     => mAxilWriteSlaves(1),
-            mAxilReadMaster     => mAxilReadMasters(1),
-            mAxilReadSlave      => mAxilReadSlaves(1),
+            mAxilWriteMaster    => mAxilWriteMasters(2),
+            mAxilWriteSlave     => mAxilWriteSlaves(2),
+            mAxilReadMaster     => mAxilReadMasters(2),
+            mAxilReadSlave      => mAxilReadSlaves(2),
 
             -- Streams
             obAxisMasters       => obAxisMasters,
