@@ -157,20 +157,6 @@ begin
          axiClk              => axilClk,
          axiClkRst           => axilRst);
 
-   U_TS_DEMUX : entity work.TimeStampDemux
-      generic map (
-         TPD_G               => TPD_G
-      )
-      port map (
-         timingClk          => timingClk,
-         timingRst          => timingRst,
-
-         timingBus          => timingBus,
-
-         timeStamp          => timeStamp,
-         pulseId            => pulseId
-      );
-
    GEN_BAYS : for bay in NUM_CFG_BAYS_C - 1 downto 0 generate
 
       signal sampleDataA       : slv(31 downto 0);
@@ -324,26 +310,27 @@ begin
    ----------------------
    U_MsgComposer : entity work.MessageComposer
       generic map (
-         TPD_G        => TPD_G
+         TPD_G          => TPD_G
       )
       port map (
-         timingClk     => timingClk,
-         timingRst     => timingRst,
+         timingClk      => timingClk,
+         timingRst      => timingRst,
 
-         doPost        => timingTrig.trigPulse(11),
+         doPost         => timingTrig.trigPulse(11),
 
-         timingBus     => timingBus,
+         timingBus      => timingBus,
 
-         bpmBus        => bpmBus,
+         bpmBus         => bpmBus,
 
-         diagnosticBus => locDiagnostic
+         diagnosticBus  => locDiagnostic,
+         timeStamp      => timeStamp,
+         pulseId        => pulseId,
+         bpMsgTimestamp => bpMsgTimestamp
       );
 
    diagnosticClk     <= timingClk;
    diagnosticRst     <= timingRst;
    diagnosticBus     <= locDiagnostic;
-
-   bpMsgTimestamp    <= ite( BPM_MSG_TSNOTPID_C, timeStamp, pulseID );
 
    U_SYNC_ENBDEC : entity work.Synchronizer
       generic map (
