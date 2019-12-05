@@ -11,6 +11,7 @@
 #once 000TopLevel.yaml
 #
 #include AppTop.yaml
+#include AmcCarrierDRAM.yaml
 
 
 # comment following 2 lines for interleaved RSSI
@@ -66,7 +67,7 @@ NetIODbg:
         UDP:
           port: 8192
 
-NetIODev:
+NetIODev: &NetIODev
   ipAddr: *IpAddr
   class: NetIODev
   configPrio: 1
@@ -85,9 +86,8 @@ NetIODev:
           protocolVersion: *DepacketizerProtocolVersion
         TDESTMux:
           TDEST: 0x00
-    axi4:
-      class: MMIODev
-      size:  0x100000000
+    BsaRam:
+      <<: *AmcCarrierDRAM
       at:
         SRP:
           protocolVersion: SRP_UDP_V3
@@ -100,10 +100,6 @@ NetIODev:
           protocolVersion: *DepacketizerProtocolVersion
         TDESTMux:
           TDEST: 0x04
-      children:
-        dram:
-          class: IntField
-          at: { offset: 0, nelms: 20 }
     Lcls1TimingStream:
       class: Field
       at:
